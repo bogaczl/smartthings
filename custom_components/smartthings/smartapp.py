@@ -25,6 +25,7 @@ from pysmartthings import (
 from homeassistant.components import webhook
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -209,7 +210,7 @@ async def setup_smartapp_endpoint(hass: HomeAssistant):
         return
 
     # Get/create config to store a unique id for this hass instance.
-    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
     config = await store.async_load()
     if not config:
         # Create config
