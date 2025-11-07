@@ -7,25 +7,25 @@ from pysmartthings import Attribute, Capability
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    CoverDeviceClass,  # Nuovo
-    CoverEntityFeature,  # Nuovo
+    CoverDeviceClass,
+    CoverEntityFeature,
+    CoverState,
     DOMAIN as COVER_DOMAIN,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
     CoverEntity,
 )
 
-# Sostituire le vecchie costanti
 DEVICE_CLASS_DOOR = CoverDeviceClass.DOOR
 DEVICE_CLASS_GARAGE = CoverDeviceClass.GARAGE
 DEVICE_CLASS_SHADE = CoverDeviceClass.SHADE
 
-# Sostituire i supporti
 SUPPORT_OPEN = CoverEntityFeature.OPEN
 SUPPORT_CLOSE = CoverEntityFeature.CLOSE
 SUPPORT_SET_POSITION = CoverEntityFeature.SET_POSITION
+
+STATE_CLOSED = CoverState.CLOSED
+STATE_CLOSING = CoverState.CLOSING
+STATE_OPEN = CoverState.OPEN
+STATE_OPENING = CoverState.OPENING
 
 from homeassistant.const import ATTR_BATTERY_LEVEL
 
@@ -62,9 +62,7 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
         Capability.garage_door_control,
         Capability.window_shade,
     ]
-    # Must have one of the min_required
     if any(capability in capabilities for capability in min_required):
-        # Return all capabilities supported/consumed
         return min_required + [Capability.battery, Capability.switch_level]
 
     return None
@@ -85,25 +83,18 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
-        # Same command for all 3 supported capabilities
         await self._device.close(set_status=True)
-        # State is set optimistically in the commands above, therefore update
-        # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state(True)
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        # Same for all capability types
         await self._device.open(set_status=True)
-        # State is set optimistically in the commands above, therefore update
-        # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state(True)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         if not self._supported_features & SUPPORT_SET_POSITION:
             return
-        # Do not set_status=True as device will report progress.
         await self._device.set_level(kwargs[ATTR_POSITION], 0)
 
     async def async_update(self):
